@@ -1,0 +1,316 @@
+@import "tailwindcss";
+
+/* Tailwind `dark:` variant follows the data-theme attribute, not the OS. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* palette */
+:root {
+  --dark-blue: #292c58;
+  --green: #93b589;
+  --pink: #e9a9c8;
+  --dark: #211f20;
+  --light: #fdf5d9;
+  --yellow: #e7c865;
+
+  --bg: var(--light);
+  --ink: var(--dark-blue);
+  --leaf: var(--green);
+  --sun: var(--yellow);
+
+  /* cat sleeps during the day */
+  --awake: 0;
+  --asleep: 1;
+  --show-moon: none;
+  --show-sun: block;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: var(--dark-blue);
+  --ink: var(--light);
+
+  --awake: 1;
+  --asleep: 0;
+  --show-moon: block;
+  --show-sun: none;
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-ink: var(--ink);
+  --color-leaf: var(--leaf);
+  --color-sun: var(--sun);
+  --color-dark-blue: var(--dark-blue);
+  --color-green: var(--green);
+  --color-pink: var(--pink);
+  --color-dark: var(--dark);
+  --color-light: var(--light);
+  --color-yellow: var(--yellow);
+
+  /* tentative single montserrat font */
+  --font-display: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-body);
+}
+
+/* base */
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+}
+
+::selection {
+  background: var(--sun);
+  color: var(--dark-blue);
+}
+
+/* art fills */
+.art .ink {
+  fill: var(--ink);
+}
+.art .pupil {
+  fill: var(--bg);
+}
+.art .leaf {
+  fill: var(--leaf);
+}
+.art .pink {
+  fill: var(--pink);
+}
+.art .sun {
+  fill: var(--sun);
+}
+.art path,
+.art g {
+  transition: fill 0.4s ease;
+}
+/* awake cat + stars for dark mode ; sleeping cat + flowers for light mode */
+.art .eyes-open,
+.art .stars {
+  opacity: var(--awake);
+  transition: opacity 0.35s ease;
+}
+.art .eyes-closed,
+.art .flowers {
+  opacity: var(--asleep);
+  transition: opacity 0.35s ease;
+}
+
+/* nav */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nav-links a {
+  color: var(--ink);
+  text-decoration: none;
+  text-underline-offset: 0.35em;
+  text-decoration-thickness: 2px;
+  transition: color 0.4s ease;
+}
+.nav-links a:hover,
+.nav-links a[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-color: var(--sun);
+}
+.nav-links a:focus-visible,
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--sun);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+.nav-rule {
+  display: block;
+  width: 1.5em;
+  height: 0.14em;
+  min-height: 2px;
+  border-radius: 1em;
+  background: var(--ink);
+  transition: background-color 0.4s ease;
+}
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 1.7em;
+  height: 1.7em;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sun);
+  cursor: pointer;
+}
+.theme-toggle svg {
+  width: 100%;
+  height: 100%;
+}
+.theme-toggle .icon-moon {
+  display: var(--show-moon);
+}
+.theme-toggle .icon-sun {
+  display: var(--show-sun);
+}
+.theme-toggle:hover svg {
+  transform: rotate(-12deg) scale(1.08);
+}
+.theme-toggle svg {
+  transition: transform 0.25s ease;
+}
+
+/* home */
+.home {
+  flex: 1;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+.stage {
+  position: relative;
+  width: min(100vw, calc(100dvh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  container-type: inline-size;
+}
+.stage > .art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.stage > .site-nav {
+  position: absolute;
+  top: 8.85%;
+  right: 4.5%;
+  transform: translateY(-50%);
+  font-size: clamp(13px, 1.25cqw, 26px);
+}
+.stage > .hero {
+  position: absolute;
+  left: 9%;
+  top: 17%;
+  width: 36%;
+}
+
+.hero {
+  color: var(--bg);
+  transition: color 0.4s ease;
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 5cqw;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.45em;
+}
+.hero p {
+  font-size: clamp(13px, 1.3cqw, 26px);
+  line-height: 1.6;
+  margin: 0 0 1em;
+  max-width: 34ch;
+}
+.hero p:last-child {
+  margin-bottom: 0;
+}
+
+/* stacked layout for narrow screens */
+.stack {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .home {
+    display: block;
+    min-height: auto;
+  }
+  .stage {
+    display: none;
+  }
+  .stack {
+    display: block;
+    padding-bottom: 2rem;
+  }
+  .stack > .site-nav {
+    justify-content: flex-end;
+    padding: 1.1rem 1.25rem 0.5rem;
+    font-size: 15px;
+  }
+  .stack-curtain {
+    position: relative;
+    min-height: calc(100vw * 980 / 1190);
+    container-type: inline-size;
+  }
+  .stack-curtain > .art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .stack-curtain > .hero {
+    position: relative;
+    padding: 12% 25% 14% 13%;
+  }
+  .stack .hero h1 {
+    font-size: 11cqw;
+  }
+  .stack .hero p {
+    font-size: clamp(14px, 3.9cqw, 18px);
+    max-width: none;
+  }
+  .stack > .window-art {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: 0.5rem;
+  }
+}
+
+/* inner page frames */
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+.page > .site-nav {
+  justify-content: flex-end;
+  padding: 1.5rem 2rem;
+  font-size: 1rem;
+}
+.page-body {
+  flex: 1;
+  padding: 2rem;
+  max-width: 60ch;
+}
+.page-body h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0 0 1rem;
+}
