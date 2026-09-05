@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { FULL_SILL } from "./curtainPaths";
 import {
   CAT_OUTLINE,
   EYES,
@@ -9,7 +10,6 @@ import {
   PLANT,
   SCENE_VIEWBOX,
   STARS,
-  WINDOW_SILL,
 } from "./paths";
 
 type Props = {
@@ -164,9 +164,13 @@ export function WindowArt({ viewBox = SCENE_VIEWBOX, className }: Props) {
       focusable="false"
     >
       <path className="ink" d={CAT_OUTLINE} />
-      <g className="ink">
-        {WINDOW_SILL.map((d, i) => (
-          <path key={i} d={d} />
+
+      {/* Always the full log. It is drawn behind the curtain, so the closed
+          curtain hides its left end and sliding the curtain uncovers it — no
+          swap to a shorter sill, and so no flat cut edge on show. */}
+      <g className="sill">
+        {FULL_SILL.map(({ d, tone }, i) => (
+          <path key={i} className={tone} d={d} />
         ))}
       </g>
       <g className="leaf">

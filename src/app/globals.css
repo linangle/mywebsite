@@ -17,6 +17,12 @@
   --leaf: var(--green);
   --sun: var(--yellow);
 
+  /* The landing scene's 16:9 box, and where down it the nav sits. Kept here
+     because the inner pages have no scene to measure against but still hang
+     their nav off the same geometry, so the links stay put as you navigate. */
+  --stage-w: min(100vw, calc(100dvh * 16 / 9));
+  --nav-y: calc(var(--stage-w) * 9 / 16 * 0.0885);
+
   /* cat sleeps during the day */
   --awake: 0;
   --asleep: 1;
@@ -81,7 +87,9 @@ h3 {
 .art .ink {
   fill: var(--ink);
 }
-.art .pupil {
+/* marks drawn *on* paper (pupils, the scribbles on the desk sheet) */
+.art .pupil,
+.art .bg {
   fill: var(--bg);
 }
 .art .leaf {
@@ -93,20 +101,135 @@ h3 {
 .art .sun {
   fill: var(--sun);
 }
-.art path,
-.art g {
+/* Paths only: a `g` never paints its own fill, and a transition registered on
+   every `g` outranks the curtain layers' own transform/opacity transitions
+   (`.art g` beats `.drape`), which froze the slide. Inherited fill changes
+   still animate here on the path itself. */
+.art path {
   transition: fill 0.4s ease;
 }
 /* awake cat + stars for dark mode ; sleeping cat + flowers for light mode */
 .art .eyes-open,
-.art .stars {
+.art .stars,
+.art .sparkles-night {
   opacity: var(--awake);
   transition: opacity 0.35s ease;
 }
 .art .eyes-closed,
-.art .flowers {
+.art .flowers,
+.art .sparkles-day {
   opacity: var(--asleep);
   transition: opacity 0.35s ease;
+}
+
+/* ---------------------------------------------------------------------------
+   Curtain — driven by data-curtain on .stage.
+
+   The curtain is opaque and drawn over the window, so opening it is a plain
+   geometric reveal: the cloth compresses towards the left edge and whatever it
+   was covering comes into view as its edge passes. Nothing is swapped in or
+   faded — the open curtain is the same drape squeezed, so the slide is one
+   uninterrupted movement in both directions.
+--------------------------------------------------------------------------- */
+.stage {
+  /* one place to retune the whole gesture; same in both directions */
+  --slide: 1.1s;
+  --slide-ease: cubic-bezier(0.45, 0.02, 0.2, 1);
+}
+/* Both layers are measured against the drawing's own coordinates rather than
+   their own boxes, so the cloth and its gap outline squeeze in exact lockstep,
+   and the sway bands' origins land on their drawn strips. */
+.drape,
+.drape-gap,
+.sway-band {
+  transform-box: view-box;
+}
+
+/* the drape spans x 129.6-956.1; scaleX squeezes it onto x 129.6-314.1 about
+   its own left edge, keeping the drawn gap to the rod cap in both states */
+.drape,
+.drape-gap {
+  transform-origin: 129.6px 42px;
+  transition: transform var(--slide) var(--slide-ease);
+}
+[data-curtain="open"] .drape,
+[data-curtain="open"] .drape-gap {
+  transform: scaleX(0.22317);
+}
+
+/* The notch is the wall-coloured break the cloth cuts beside the rod at the
+   top right. It is drawn on the cloth, so the squeeze would pinch it from 24
+   units to 5 and the rod would nearly touch the compressed curtain. Scaling it
+   back up about its own left edge — which rides on the cloth's right edge —
+   keeps the break the same width in both states. */
+.drape .notch {
+  transform-box: view-box;
+  transform-origin: 955.7px 42px;
+  transition:
+    transform var(--slide) var(--slide-ease),
+    fill 0.4s ease;
+}
+[data-curtain="open"] .drape .notch {
+  transform: scaleX(4.4809); /* 1 / 0.22317 */
+}
+
+/* The gap the curtain keeps around itself. Stroking the cloth's own outline
+   means the margin follows its shape. The squeeze would thin the stroke with
+   it, pinching the right-hand margin while the drawn gap on the left kept its
+   width, so the open state fattens the stroke by the same ratio — the margin
+   the log and sparkles keep from the cloth reads the same in both states. */
+.drape-gap path {
+  stroke: var(--bg);
+  stroke-width: 60;
+  stroke-linejoin: round;
+  /* same specificity as `.art path`, so the fill leg must be restated here */
+  transition:
+    stroke 0.4s ease,
+    fill 0.4s ease,
+    stroke-width var(--slide) var(--slide-ease);
+}
+[data-curtain="open"] .drape-gap path {
+  stroke-width: 269; /* 60 / 0.22317 */
+}
+
+/* the text is written on the curtain, so it goes as soon as it starts moving
+   (the base .hero rule further down carries the matching closing transition) */
+[data-curtain="open"] .hero {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage {
+    --slide: 0.01ms;
+  }
+}
+
+.curtain-toggle {
+  position: absolute;
+  /* over the closed curtain, as a % of the drawing */
+  left: 6.7%;
+  top: 3.9%;
+  width: 44.3%;
+  height: 87.5%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  /* travel with the curtain rather than jumping when it lands */
+  transition:
+    left var(--slide) var(--slide-ease),
+    width var(--slide) var(--slide-ease);
+}
+/* once open, only the compressed curtain is left to click — it keeps the
+   drape's left edge, so only the width changes */
+[data-curtain="open"] .curtain-toggle {
+  width: 9.7%;
+}
+.curtain-toggle:focus-visible {
+  outline: 2px solid var(--sun);
+  outline-offset: 4px;
+  border-radius: 4px;
 }
 
 /* nav */
@@ -183,14 +306,20 @@ h3 {
 /* home */
 .home {
   flex: 1;
-  min-height: 100dvh;
+}
+
+/* The landing scene keeps its full size — it is only ever capped so the whole
+   16:9 fits the viewport height. The desk then starts straight after it rather
+   than after a full screenful, so the top of the desk is already showing before
+   you scroll. */
+.stage-wrap {
   display: grid;
   place-items: center;
 }
 
 .stage {
   position: relative;
-  width: min(100vw, calc(100dvh * 16 / 9));
+  width: var(--stage-w);
   aspect-ratio: 16 / 9;
   container-type: inline-size;
 }
@@ -203,7 +332,7 @@ h3 {
 }
 .stage > .site-nav {
   position: absolute;
-  top: 8.85%;
+  top: var(--nav-y);
   right: 4.5%;
   transform: translateY(-50%);
   font-size: clamp(13px, 1.25cqw, 26px);
@@ -217,7 +346,12 @@ h3 {
 
 .hero {
   color: var(--bg);
-  transition: color 0.4s ease;
+  /* on closing, wait for the curtain to be back under the text */
+  transition:
+    color 0.4s ease,
+    opacity 0.3s ease 0.72s;
+  /* never swallow clicks meant for the curtain underneath */
+  pointer-events: none;
 }
 .hero h1 {
   font-family: var(--font-display);
@@ -237,18 +371,202 @@ h3 {
   margin-bottom: 0;
 }
 
+/* experience — the desk scene, scrolled to rather than fitted to the viewport */
+
+/* Slide the desk up into the empty band under the landing drawing. The scene's
+   lowest ink is the curtain at 92.3% of its height, so the bottom ~7.7% is dead
+   space; borrowing 7% of it puts the top of the sheet and the sticky note on
+   screen without shrinking the landing or covering any of it. Needed because on
+   a 16:9 display the landing scene is exactly as tall as the viewport, leaving
+   nothing showing below it. Mirrors .stage's own sizing: the scene is
+   min(100vw, 100dvh * 16/9) wide, so 9/16 of that is its height. */
+.desk {
+  margin-top: calc(min(100vw * 9 / 16, 100dvh) * -0.07);
+}
+
+.desk-scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1920 / 1573;
+  container-type: inline-size;
+}
+.desk-scene > .art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+/* Both boxes are placed as a % of the drawing, so they stay put as it scales.
+   The sheet is hand-drawn and its left edge leans, so the entries are inset far
+   enough to clear the slant at their topmost line. */
+.desk-scene > .desk-heading {
+  position: absolute;
+  left: 31.5%;
+  top: 16.8%;
+}
+.desk-scene > .desk-pending {
+  position: absolute;
+  left: 39%;
+  top: 38.5%;
+  width: 32%;
+}
+
+.desk-heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 4.6cqw;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  transition: color 0.4s ease;
+}
+
+/* text sitting on the sheet, so it takes the background colour */
+.desk-pending {
+  margin: 0;
+  color: var(--bg);
+  font-size: clamp(14px, 1.6cqw, 28px);
+  font-style: italic;
+  line-height: 1.55;
+  transition: color 0.4s ease;
+}
+
+.desk-narrow {
+  display: none;
+}
+
+/* projects — the work-setup scene, scrolled to after the desk */
+
+/* The desk drawing's lowest ink (the pen) sits at 93.7% of its height, so its
+   bottom ~6.3% is dead space; tucking the setup most of the way into that band
+   keeps the two drawings reading as one continuous desk-to-desk page instead
+   of leaving a blank stripe between them. The desk scene is 100vw wide, so
+   its height is 1573/1920 of that. */
+.setup {
+  margin-top: calc(100vw * 1573 / 1920 * -0.05);
+}
+
+.setup-scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1920 / 1371.06;
+  container-type: inline-size;
+}
+.setup-scene > .art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+/* Placed as a % of the drawing, like the desk. The laptop screen spans
+   x 25.7-74.4% and y 23.3-69.7% of the drawing; the insets keep the text clear
+   of the screen's hand-drawn edges. The screen is smaller than the desk's
+   sheet, so the heading drops a size to match. */
+/* unlike the desk's heading, this one sits *on* the laptop screen, so like
+   .desk-pending it takes the background colour */
+.setup-scene > .desk-heading {
+  position: absolute;
+  left: 30%;
+  top: 26.5%;
+  font-size: 3.9cqw;
+  color: var(--bg);
+}
+.setup-scene > .desk-pending {
+  position: absolute;
+  left: 31%;
+  top: 38%;
+  width: 36%;
+}
+
+.setup-narrow {
+  display: none;
+}
+
 /* stacked layout for narrow screens */
 .stack {
   display: none;
 }
 
 @media (max-width: 767px) {
-  .home {
+  .stage-wrap {
     display: block;
-    min-height: auto;
   }
   .stage {
     display: none;
+  }
+
+  /* the full desk is too wide to read on a phone — keep the sheet, drop the
+     props, and let the sheet stretch to whatever the text needs */
+  .desk-scene {
+    display: none;
+  }
+  /* no landing scene to tuck under here — the narrow layout just flows */
+  .desk {
+    margin-top: 0;
+  }
+  .desk-narrow {
+    display: block;
+    padding: 2.5rem 1.25rem 3rem;
+  }
+
+  /* same trade for the setup: keep the laptop screen, drop the props */
+  .setup-scene {
+    display: none;
+  }
+  .setup {
+    margin-top: 0;
+  }
+  .setup-narrow {
+    display: block;
+    padding: 0 1.25rem 3rem;
+  }
+  .setup-narrow > .desk-heading {
+    font-size: clamp(2.25rem, 11vw, 3.5rem);
+    margin-bottom: 1rem;
+  }
+  .setup-screen {
+    position: relative;
+    container-type: inline-size;
+  }
+  .setup-screen > .art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  /* the screen's edges bow gently but don't lean like the sheet's, so an even
+     inset keeps the text on it */
+  .setup-screen > .desk-pending {
+    position: relative;
+    padding: 10% 10% 12% 12%;
+    font-size: clamp(14px, 3.5cqw, 18px);
+  }
+  .desk-narrow > .desk-heading {
+    font-size: clamp(2.25rem, 11vw, 3.5rem);
+    margin-bottom: 1rem;
+  }
+  .desk-paper {
+    position: relative;
+    container-type: inline-size;
+  }
+  .desk-paper > .art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  /* The sheet's left edge leans in towards the top, so the text needs a wide
+     left inset to stay on the paper at its first line — otherwise the top lines
+     spill onto the background and vanish (same colour as the sheet). */
+  .desk-paper > .desk-pending {
+    position: relative;
+    padding: 12% 10% 14% 22%;
+    font-size: clamp(14px, 3.5cqw, 18px);
   }
   .stack {
     display: block;
@@ -297,10 +615,24 @@ h3 {
   flex-direction: column;
   min-height: 100dvh;
 }
-.page > .site-nav {
-  justify-content: flex-end;
-  padding: 1.5rem 2rem;
-  font-size: 1rem;
+/* The nav lands on the same spot it holds over the landing scene: the same
+   16:9 box, centred the same way, so nothing shifts between pages. The box is
+   twice --nav-y tall, which both centres the nav in it and drops the body at
+   roughly the height the landing hero starts. */
+.page-header {
+  position: relative;
+  flex: none;
+  width: var(--stage-w);
+  height: calc(var(--nav-y) * 2);
+  margin-inline: auto;
+  container-type: inline-size;
+}
+.page-header > .site-nav {
+  position: absolute;
+  top: var(--nav-y);
+  right: 4.5%;
+  transform: translateY(-50%);
+  font-size: clamp(13px, 1.25cqw, 26px);
 }
 .page-body {
   flex: 1;
@@ -313,4 +645,21 @@ h3 {
   letter-spacing: -0.02em;
   line-height: 1;
   margin: 0 0 1rem;
+}
+
+/* no landing scene at this width either — match the stacked nav, which just
+   flows at the top of the page rather than sitting on a drawing */
+@media (max-width: 767px) {
+  .page-header {
+    width: auto;
+    height: auto;
+    margin-inline: 0;
+  }
+  .page-header > .site-nav {
+    position: static;
+    justify-content: flex-end;
+    transform: none;
+    padding: 1.1rem 1.25rem 0.5rem;
+    font-size: 15px;
+  }
 }
