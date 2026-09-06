@@ -16,16 +16,12 @@ import { Nav } from "./Nav";
 function HeroText() {
   return (
     <div className="hero">
-      <h1>Hello!</h1>
+      <h1>hello, i'm angelina!</h1>
       <p>
-        filler text filler text filler text filler text filler text filler text
-        filler text filler text filler text filler text filler text filler text
-        filler text filler text filler text
+        i'm an MIT student studying computer science.
       </p>
       <p>
-        filler text filler text filler text filler text filler text filler text
-        filler text filler text filler text filler text filler text filler text
-        filler text filler text filler text
+        this website is a work in progress -- forthcoming content
       </p>
     </div>
   );
