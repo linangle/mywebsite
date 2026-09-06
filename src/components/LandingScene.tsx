@@ -18,10 +18,9 @@ function HeroText() {
     <div className="hero">
       <h1>hello, i'm angelina!</h1>
       <p>
-        i'm an MIT student studying computer science.
+        this website is under construction -- content forthcoming
       </p>
       <p>
-        this website is a work in progress -- forthcoming content
       </p>
     </div>
   );
