@@ -634,10 +634,63 @@ h3 {
   transform: translateY(-50%);
   font-size: clamp(13px, 1.25cqw, 26px);
 }
+/* The switch between the sections of play, in the header's other corner: the
+   same distance in from the left as the links keep from the right, on the same
+   line, in the same hand. The open section is underlined the way the current
+   page is among the links; the others wait a shade lighter. */
+.page-header > .page-tabs {
+  position: absolute;
+  top: var(--nav-y);
+  left: 4.5%;
+  transform: translateY(-50%);
+  font-size: clamp(13px, 1.25cqw, 26px);
+}
+.page-tabs ul {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.page-tabs a {
+  color: var(--ink);
+  opacity: 0.55;
+  text-decoration: none;
+  text-underline-offset: 0.35em;
+  text-decoration-thickness: 2px;
+  transition:
+    color 0.4s ease,
+    opacity 0.2s ease;
+}
+.page-tabs a:hover,
+.page-tabs a[aria-current="page"] {
+  opacity: 1;
+  text-decoration: underline;
+  text-decoration-color: var(--sun);
+}
+.page-tabs a:focus-visible {
+  outline: 2px solid var(--sun);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+/* The body runs between the header's two corners: the same box, inset by the
+   margin the links and the tabs keep from its edges, so whatever it holds
+   lines up under them. */
 .page-body {
   flex: 1;
-  padding: 2rem;
+  width: var(--stage-w);
+  margin-inline: auto;
+  padding: 0 4.5% 4rem;
+  container-type: inline-size;
+}
+.page-body > p {
   max-width: 60ch;
+  margin: 0;
+  font-size: clamp(14px, 1.3cqw, 26px);
+  line-height: 1.6;
 }
 .page-body h1 {
   font-size: clamp(2.5rem, 6vw, 4.5rem);
@@ -661,5 +714,220 @@ h3 {
     transform: none;
     padding: 1.1rem 1.25rem 0.5rem;
     font-size: 15px;
+  }
+}
+
+/* play → photos — the gallery and its lightbox */
+
+/* Rows that each run the full width: every photo in a row is scaled to one
+   height, so a portrait stands narrow between the landscapes instead of being
+   cropped to match them. Each photo asks for a width in proportion to its own
+   shape (--ar, width over height) at a base row height, and grows in the same
+   proportion, so the photos on a line scale up together to fill it and their
+   heights stay level. The base height follows the page width, so a wide screen
+   gets taller rows rather than more of them; the floor keeps a phone at two or
+   three across. */
+.gallery {
+  --row-h: clamp(150px, 16cqw, 280px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+/* takes up the slack on the last row, so a photo left on its own there keeps
+   its base size rather than stretching across the page */
+.gallery::after {
+  content: "";
+  flex-grow: 1000000;
+}
+.gallery-item {
+  position: relative;
+  flex-grow: calc(var(--ar) * 100);
+  flex-basis: calc(var(--ar) * var(--row-h));
+  min-width: 0;
+  aspect-ratio: var(--ar);
+}
+.gallery-thumb {
+  position: absolute;
+  inset: 0;
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+.gallery-thumb:focus-visible {
+  outline: 2px solid var(--sun);
+  outline-offset: 3px;
+}
+.gallery-img {
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.gallery-thumb:hover .gallery-img {
+  transform: scale(1.03);
+}
+
+/* The lightbox: one photo, large, over the darkened page. The dialog itself is
+   the dark, stretched over the whole viewport, so a click anywhere off the
+   photo lands on it and closes it. Dark in both themes — the photo is the only
+   thing lit. */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgb(0 0 0 / 0.86);
+  color: var(--light);
+}
+.lightbox::backdrop {
+  background: transparent;
+}
+.lightbox[open] {
+  display: grid;
+  place-items: center;
+  animation: lightbox-in 0.22s ease;
+}
+@keyframes lightbox-in {
+  from {
+    opacity: 0;
+  }
+}
+/* the page behind stays put while a photo is up */
+html:has(.lightbox[open]) {
+  overflow: hidden;
+}
+.lightbox-figure {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  max-width: 100%;
+  margin: 0;
+}
+/* sized by whichever edge meets the viewport first, leaving room for the
+   caption beneath */
+.lightbox-img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 94vw;
+  max-height: 82dvh;
+  border-radius: 3px;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.5);
+}
+.lightbox-caption {
+  max-width: 60ch;
+  padding-inline: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-align: center;
+  opacity: 0.85;
+}
+.lightbox-close,
+.lightbox-step {
+  position: fixed;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--light);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    transform 0.25s ease;
+}
+.lightbox-close:hover,
+.lightbox-step:hover {
+  color: var(--sun);
+}
+.lightbox-close:focus-visible,
+.lightbox-step:focus-visible {
+  outline: 2px solid var(--sun);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+.lightbox-close {
+  top: 0.75rem;
+  right: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 2.4rem;
+}
+.lightbox-close:hover {
+  transform: scale(1.15);
+}
+.lightbox-step {
+  top: 50%;
+  translate: 0 -50%;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  /* the chevrons sit low in their box */
+  padding-bottom: 0.3rem;
+  font-size: 2.6rem;
+}
+.lightbox-prev {
+  left: 0.75rem;
+}
+.lightbox-next {
+  right: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox[open] {
+    animation: none;
+  }
+  .gallery-img {
+    transition: none;
+  }
+}
+
+@media (max-width: 767px) {
+  /* there is no room beside the links for the tabs here, so they take the
+     line under them, in the corner they hold on a wide screen */
+  .page-header-tabs {
+    display: flex;
+    flex-direction: column;
+  }
+  .page-header-tabs > .site-nav {
+    order: -1;
+  }
+  .page-header > .page-tabs {
+    position: static;
+    transform: none;
+    padding: 0.5rem 1.25rem 0;
+    font-size: 15px;
+  }
+  /* auto side margins would centre a shrink-wrapped body here rather than
+     let it stretch, so they go the way the header's do */
+  .page-body {
+    width: auto;
+    margin-inline: 0;
+    padding: 1rem 1.25rem 3rem;
+  }
+  /* A phone is too narrow for the base height a wide screen starts from: a
+     landscape and a portrait side by side already overrun it, so nearly every
+     photo took a row to itself and a portrait ran half a screen tall. Shorter
+     rows put two or three on a line again, at heights closer to each other. */
+  .gallery {
+    --row-h: 105px;
+    gap: 8px;
+  }
+  /* the photo runs nearly edge to edge here, so the arrows sit on it and take
+     a little dark of their own to stay legible */
+  .lightbox-step {
+    background: rgb(0 0 0 / 0.4);
   }
 }
