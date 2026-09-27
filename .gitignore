@@ -42,3 +42,6 @@ next-env.d.ts
 
 # photo originals — the site serves the web copies in src/photos
 /website_photos
+
+# claude code tooling config, local to this machine
+/.claude/
