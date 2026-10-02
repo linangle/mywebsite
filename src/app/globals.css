@@ -717,7 +717,20 @@ h3 {
   }
 }
 
-/* play → photos — the gallery and its lightbox */
+/* play — the galleries on art and photos, and the lightbox they open into */
+
+/* A set of pieces on play → art: its name over its own gallery, in the hand
+   of the tabs above but a step larger, and room before the next set. */
+.subsection + .subsection {
+  margin-top: 3.5rem;
+}
+.subsection-title {
+  margin: 0 0 0.9rem;
+  font-size: clamp(15px, 1.6cqw, 32px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
 
 /* Rows that each run the full width: every photo in a row is scaled to one
    height, so a portrait stands narrow between the landscapes instead of being

@@ -1,28 +1,43 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { PHOTOS } from "@/photos";
+import Image, { type StaticImageData } from "next/image";
 
-/** how far a finger has to travel across the open photo to count as a swipe */
+/** how far a finger has to travel across the open picture to count as a swipe */
 const SWIPE_MIN = 48;
 
+/** one thing hung in a gallery — a photo, or a piece of art */
+export type Picture = {
+  image: StaticImageData;
+  alt: string;
+  /** shown under it in the lightbox; "" for none */
+  caption: string;
+};
+
 /**
- * The photos, hung in rows that each run the full width: every photo in a row
+ * Pictures hung in rows that each run the full width: every picture in a row
  * is scaled to the same height, so the portraits stand narrow between the
  * landscapes rather than being cropped to match them. The rows are laid out
- * by CSS from each photo's own proportions (`--ar`), so the page needs no
+ * by CSS from each picture's own proportions (`--ar`), so the page needs no
  * measuring. Clicking one opens it large in the lightbox below.
+ *
+ * `noun` is what the lightbox calls one of them to a screen reader.
  */
-export function PhotoGallery() {
+export function Gallery({
+  pictures,
+  noun = "photo",
+}: {
+  pictures: readonly Picture[];
+  noun?: string;
+}) {
   const [open, setOpen] = useState<number | null>(null);
   const step = (by: number) =>
-    setOpen((i) => (i === null ? i : (i + by + PHOTOS.length) % PHOTOS.length));
+    setOpen((i) => (i === null ? i : (i + by + pictures.length) % pictures.length));
 
   return (
     <>
       <ul className="gallery">
-        {PHOTOS.map(({ image, alt }, i) => (
+        {pictures.map(({ image, alt }, i) => (
           <li
             key={image.src}
             className="gallery-item"
@@ -46,29 +61,39 @@ export function PhotoGallery() {
           </li>
         ))}
       </ul>
-      <Lightbox index={open} onClose={() => setOpen(null)} onStep={step} />
+      <Lightbox
+        pictures={pictures}
+        noun={noun}
+        index={open}
+        onClose={() => setOpen(null)}
+        onStep={step}
+      />
     </>
   );
 }
 
 /**
- * One photo, large, over a darkened page. A native dialog, so the browser
+ * One picture, large, over a darkened page. A native dialog, so the browser
  * holds focus inside it, closes it on escape and hands focus back to the
- * thumbnail it came from. Clicking the dark around the photo or the cross
+ * thumbnail it came from. Clicking the dark around the picture or the cross
  * closes it; the arrows, the arrow keys and a swipe move along the row.
  */
 function Lightbox({
+  pictures,
+  noun,
   index,
   onClose,
   onStep,
 }: {
+  pictures: readonly Picture[];
+  noun: string;
   index: number | null;
   onClose: () => void;
   onStep: (by: number) => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const touchX = useRef<number | null>(null);
-  const photo = index === null ? null : PHOTOS[index];
+  const picture = index === null ? null : pictures[index];
 
   // the dialog is only modal when opened by showModal(), so it is driven from
   // here rather than through the `open` attribute
@@ -93,9 +118,9 @@ function Lightbox({
     <dialog
       ref={ref}
       className="lightbox"
-      aria-label="photo, larger"
+      aria-label={`${noun}, larger`}
       onClose={onClose}
-      // only the dark itself — a click on the photo or a button lands on them
+      // only the dark itself — a click on the picture or a button lands on them
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -110,20 +135,20 @@ function Lightbox({
         if (Math.abs(dx) >= SWIPE_MIN) onStep(dx < 0 ? 1 : -1);
       }}
     >
-      {photo && (
-        // keyed on the file so a step swaps the photo out cleanly instead of
+      {picture && (
+        // keyed on the file so a step swaps the picture out cleanly instead of
         // stretching the old one into the new one's shape while it loads
-        <figure className="lightbox-figure" key={photo.image.src}>
+        <figure className="lightbox-figure" key={picture.image.src}>
           <Image
-            src={photo.image}
-            alt={photo.alt}
+            src={picture.image}
+            alt={picture.alt}
             sizes="100vw"
             loading="eager"
             placeholder="blur"
             className="lightbox-img"
           />
-          {photo.caption && (
-            <figcaption className="lightbox-caption">{photo.caption}</figcaption>
+          {picture.caption && (
+            <figcaption className="lightbox-caption">{picture.caption}</figcaption>
           )}
         </figure>
       )}
@@ -135,13 +160,13 @@ function Lightbox({
       >
         ×
       </button>
-      {PHOTOS.length > 1 && (
+      {pictures.length > 1 && (
         <>
           <button
             type="button"
             className="lightbox-step lightbox-prev"
             onClick={() => onStep(-1)}
-            aria-label="previous photo"
+            aria-label={`previous ${noun}`}
           >
             ‹
           </button>
@@ -149,7 +174,7 @@ function Lightbox({
             type="button"
             className="lightbox-step lightbox-next"
             onClick={() => onStep(1)}
-            aria-label="next photo"
+            aria-label={`next ${noun}`}
           >
             ›
           </button>

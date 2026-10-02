@@ -40,8 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# photo originals — the site serves the web copies in src/photos
+# photo and art originals — the site serves the web copies in src/photos and src/art
 /website_photos
+/website_art
 
 # claude code tooling config, local to this machine
 /.claude/
