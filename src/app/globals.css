@@ -784,6 +784,54 @@ h3 {
 .gallery-thumb:hover .gallery-img {
   transform: scale(1.03);
 }
+/* A stack — several pictures under one thumbnail — shows the edges of the
+   ones beneath it, fanned up and to the right into the gap, and says how
+   many it holds in the corner. */
+.gallery-stack {
+  isolation: isolate;
+}
+.gallery-stack::before,
+.gallery-stack::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+  transition: translate 0.4s ease, rotate 0.4s ease;
+}
+.gallery-stack::before {
+  translate: 7px -6px;
+  rotate: 3deg;
+  opacity: 0.6;
+}
+.gallery-stack::after {
+  translate: 3px -3px;
+  rotate: 1.5deg;
+  opacity: 0.85;
+}
+.gallery-stack:hover::before {
+  translate: 9px -8px;
+  rotate: 4.5deg;
+}
+.gallery-stack:hover::after {
+  translate: 4px -4px;
+  rotate: 2.25deg;
+}
+.gallery-stack-count {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 0.2em 0.65em;
+  border-radius: 999px;
+  background: rgb(41 44 88 / 0.85);
+  color: var(--light);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
 
 /* The lightbox: one photo, large, over the darkened page. The dialog itself is
    the dark, stretched over the whole viewport, so a click anywhere off the
@@ -836,6 +884,51 @@ html:has(.lightbox[open]) {
   max-height: 82dvh;
   border-radius: 3px;
   box-shadow: 0 12px 40px rgb(0 0 0 / 0.5);
+}
+/* a stack keeps room under the picture for its own arrows */
+.lightbox-figure-stack .lightbox-img {
+  max-height: calc(82dvh - 3rem);
+}
+/* The arrows within a stack: small and ringed, under the picture, so they
+   read apart from the big ones at the edges that leave the stack. */
+.lightbox-sub {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+}
+.lightbox-sub-count {
+  margin-left: 0.5em;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+.lightbox-sub-step {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  /* the chevrons sit low in their box */
+  padding: 0 0 0.2rem;
+  border: 1px solid rgb(253 245 217 / 0.35);
+  border-radius: 50%;
+  background: none;
+  color: var(--light);
+  font: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+.lightbox-sub-step:hover {
+  color: var(--sun);
+  border-color: var(--sun);
+}
+.lightbox-sub-step:focus-visible {
+  outline: 2px solid var(--sun);
+  outline-offset: 3px;
 }
 .lightbox-caption {
   max-width: 60ch;
@@ -902,7 +995,9 @@ html:has(.lightbox[open]) {
   .lightbox[open] {
     animation: none;
   }
-  .gallery-img {
+  .gallery-img,
+  .gallery-stack::before,
+  .gallery-stack::after {
     transition: none;
   }
 }
